@@ -1,15 +1,20 @@
-import { useContext, useLayoutEffect } from "react";
-import { Text, View, StyleSheet, TextInput } from "react-native";
+import { useContext, useLayoutEffect, useState } from "react";
+import { StyleSheet, View } from "react-native";
+
+import ExpenseForm from "../components/ManageExpense/ExpenseForm";
 import IconButton from "../components/UI/IconButton";
 import { GlobalStyles } from "../constants/styles";
 import { ExpensesContext } from "../store/expenses-context";
-import ExpenseForm from "../components/ManageExpense/ExpenseForm";
-import { storeExpense } from "../util/http";
+import { storeExpense, updateExpense, deleteExpense } from "../util/http";
+import LoadingOverlay from "../components/UI/LoadingOverlay";
 
-const ManageExpense = ({ route, navigation }) => {
+function ManageExpense({ route, navigation }) {
+	const [isSubmitting, setIsSubmitting] = useState(false);
+
 	const expensesCtx = useContext(ExpensesContext);
-	const editedExpenseId = route?.params?.expenseId;
-	const isEditing = !!editedExpenseId; //convert a value into a boolean. falsey value to false, truthy value to true
+
+	const editedExpenseId = route.params?.expenseId;
+	const isEditing = !!editedExpenseId;
 
 	const selectedExpense = expensesCtx.expenses.find(
 		(expense) => expense.id === editedExpenseId
@@ -21,7 +26,9 @@ const ManageExpense = ({ route, navigation }) => {
 		});
 	}, [navigation, isEditing]);
 
-	function deleteExpenseHandler() {
+	async function deleteExpenseHandler() {
+		setIsSubmitting(true);
+		await deleteExpense(editedExpenseId);
 		expensesCtx.deleteExpense(editedExpenseId);
 		navigation.goBack();
 	}
@@ -30,25 +37,30 @@ const ManageExpense = ({ route, navigation }) => {
 		navigation.goBack();
 	}
 
-	function confirmHandler(expenseData) {
+	async function confirmHandler(expenseData) {
+		setIsSubmitting(true);
 		if (isEditing) {
 			expensesCtx.updateExpense(editedExpenseId, expenseData);
+			await updateExpense(editedExpenseId, expenseData);
 		} else {
-			storeExpense(expenseData);
-			expensesCtx.addExpense(expenseData);
+			const id = await storeExpense(expenseData);
+			expensesCtx.addExpense({ ...expenseData, id: id });
 		}
 		navigation.goBack();
+	}
+
+	if (isSubmitting) {
+		<LoadingOverlay />;
 	}
 
 	return (
 		<View style={styles.container}>
 			<ExpenseForm
-				onCancel={cancelHandler}
 				submitButtonLabel={isEditing ? "Update" : "Add"}
 				onSubmit={confirmHandler}
+				onCancel={cancelHandler}
 				defaultValues={selectedExpense}
 			/>
-
 			{isEditing && (
 				<View style={styles.deleteContainer}>
 					<IconButton
@@ -61,7 +73,9 @@ const ManageExpense = ({ route, navigation }) => {
 			)}
 		</View>
 	);
-};
+}
+
+export default ManageExpense;
 
 const styles = StyleSheet.create({
 	container: {
@@ -69,7 +83,6 @@ const styles = StyleSheet.create({
 		padding: 24,
 		backgroundColor: GlobalStyles.colors.primary800,
 	},
-
 	deleteContainer: {
 		marginTop: 16,
 		paddingTop: 8,
@@ -78,4 +91,3 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 	},
 });
-export default ManageExpense;
