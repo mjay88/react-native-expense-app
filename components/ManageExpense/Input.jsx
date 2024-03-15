@@ -1,4 +1,11 @@
-import { TextInput, View, StyleSheet, Text } from "react-native";
+import {
+	TextInput,
+	View,
+	StyleSheet,
+	Text,
+	TouchableWithoutFeedback,
+	Keyboard,
+} from "react-native";
 import { GlobalStyles } from "../../constants/styles";
 
 const Input = ({ label, style, textInputConfig, invalid }) => {
@@ -13,12 +20,23 @@ const Input = ({ label, style, textInputConfig, invalid }) => {
 	}
 
 	return (
+		// <TouchableWithoutFeedback
+		// 	onPress={() => Keyboard.dismiss()}
+		// 	accessible="false"
+		// >
 		<View style={[styles.inputContainer, style]}>
 			<Text style={[styles.label, invalid && styles.invalidLabel]}>
 				{label}
 			</Text>
-			<TextInput style={inputStyles} {...textInputConfig} />
+			<TextInput
+				style={inputStyles}
+				{...textInputConfig}
+				returnKeyType="done"
+				onSubmitEditing={() => Keyboard.dismiss()}
+				blurOnSubmit={true}
+			/>
 		</View>
+		// </TouchableWithoutFeedback>
 	);
 };
 
