@@ -44,8 +44,12 @@ const ExpenseForm = ({
 		};
 
 		const amountIsValid = !isNaN(expenseData.amount) && expenseData.amount > 0;
+		// console.log(
+		// 	expenseData.date.length > 10,
+		// 	expenseData.date.toString(),
+		// 	"date check"
+		// );
 		const dateIsValid = expenseData.date.toString() !== "Invalid Date";
-		// && expenseData.date.length > 10;
 		const descriptionIsValid = expenseData.description.trim().length > 0;
 
 		if (!amountIsValid || !dateIsValid || !descriptionIsValid) {
